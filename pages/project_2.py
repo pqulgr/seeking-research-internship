@@ -56,7 +56,58 @@ class population():
         self.taux_vide = taux_vide
         self.map_pop, self.places_libres = create_map_pop(n_pop, taux_vide)
         self.map_insatisfaction = create_map_insatisfaction(self.map_pop, n_pop)
+    def simulate(self,iter):
+        n=0
+        indices_i, indices_j = np.where(self.map_insatisfaction>self.taux_insatisfaction)
+        indices_i, indices_j = list(indices_i), list(indices_j)
+        progress_bar = st.empty()
+        while n<iter and len(indices_i)>0:
+            progress_bar.progress((n + 1) /iter)
+            choice_from = np.random.randint(0,len(indices_i))
+            choice_to = self.places_libres[np.random.randint(0, len(self.places_libres))]
+            i,j = indices_i.pop(choice_from), indices_j.pop(choice_from)
+            self.map_pop[choice_to[0],choice_to[1]] = self.map_pop[i, j]
+            self.map_pop[i,j] = 0
+            self.map_insatisfaction = create_map_insatisfaction(self.map_pop, self.n_pop)
+            indices_i, indices_j = np.where(self.map_insatisfaction>self.taux_insatisfaction)
+            indices_i, indices_j = list(indices_i), list(indices_j)
+            n+=1
+        progress_bar.empty()
+        return self
+    def plot_map(self):
+        # Créer les heatmaps avec Seaborn
+        fig, axes = plt.subplots(1, 2, figsize=(10, 5))  # 1 ligne, 2 colonnes
 
+        sns.heatmap(self.map_pop, ax=axes[0], cmap="YlGnBu", cbar=True, xticklabels=False, yticklabels=False)
+        cbar = axes[0].collections[0].colorbar
+        cbar.set_ticks([0, 1, 2])
+        cbar.set_ticklabels([0, 1, 2])
+        axes[0].set_title("Types des individus")
+
+        sns.heatmap(self.map_insatisfaction, ax=axes[1], cmap="YlGnBu", cbar=True, xticklabels=False, yticklabels=False)
+        axes[1].set_title("Carte de l'insatisfaction")
+        
+        # Ajuster l'espace entre les subplots
+        plt.tight_layout()
+        
+        # Afficher les heatmaps dans Streamlit
+        st.pyplot(fig)
+        return
+
+def generate_population():
+    st.session_state.population = population(
+        st.session_state.params['n'],
+        st.session_state.params['insatisfaction'],
+        st.session_state.params['vide']
+    )
+    st.session_state.step = 2
+
+if 'population' not in st.session_state:
+    st.session_state.population = None
+if 'step' not in st.session_state:
+    st.session_state.step = 0
+if 'params' not in st.session_state:
+    st.session_state.params = {'n': 50, 'vide': 0.1, 'insatisfaction': 1/3}
 
 def main():
     st.set_page_config(layout="wide")
@@ -89,45 +140,56 @@ def main():
     - Un individu est satisfait si une certaine proportion de ses voisins est du même type que lui
     - Les individus insatisfaits se déplacent vers des cases vides jusqu'à ce que tous soient satisfaits
     """)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        n = st.slider("Taille de la grille", 10, 100, 50, key="schelling_n")
-        vide = st.slider("Proportion de cases vides", 0.1, 0.5, 0.1, key="schelling_vide")
-    with col2:
-        insatisfaction = st.slider("Seuil d'insatisfaction", 0.0, 1.0, 1/3, key="schelling_insatisfaction")
-    
-    if st.button("Génerer une population"):
-        st.markdown("### Explication de la population")
-        st.markdown("""
-            La population est composée de 3 choses:
-            - 0 emplacement vides
-            - 1 individus de type 1
-            - 2 individus de type 2
-            """)
-        st.markdown("""Chaque individu a un score d'insatisfaction, calculé comme suit :""")
-        st.latex(r"\text{Score d'insatisfaction} = \sum_{i=1}^{8} \frac{\text{voisins du même type que l'individu}}{\text{total de voisins présents}}")
-        pop = population(n, insatisfaction, vide)
-        
-        # Créer les heatmaps avec Seaborn
-        fig, axes = plt.subplots(1, 2, figsize=(10, 5))  # 1 ligne, 2 colonnes
+    generate_container = st.container()
+    simulate_container = st.container()
+    results_container = st.container()
 
-        sns.heatmap(pop.map_pop, ax=axes[0], cmap="YlGnBu", cbar=True, xticklabels=False, yticklabels=False)
-        cbar = axes[0].collections[0].colorbar
-        cbar.set_ticks([0, 1, 2])
-        cbar.set_ticklabels([0, 1, 2])
-        axes[0].set_title("Types des individus")
-        #axes[1].set_xlabel("X Axis Label")
-        #axes[1].set_ylabel("Y Axis Label")
+    with generate_container:
+        col1, col2 = st.columns(2)
+        with col1:
+            n = st.slider("Taille de la grille", 10, 100, 50, key="schelling_n")
+        with col2:
+            vide = st.slider("Proportion de cases vides", 0.1, 0.5, 0.1, key="schelling_vide")
+        
+        if st.button("Générer une population") or (st.session_state.step >= 1 and (n != st.session_state.params['n'] or vide != st.session_state.params['vide'])):
+            st.session_state.params['n'] = n
+            st.session_state.params['vide'] = vide
+            generate_population()
+            st.markdown("### Explication de la population")
+            st.markdown("""
+                La population est composée de 3 choses:
+                - 0 emplacement vides
+                - 1 individus de type 1
+                - 2 individus de type 2
+                """)
+            st.markdown("""Chaque individu a un score d'insatisfaction, calculé comme suit :""")
+            st.latex(r"\text{Score d'insatisfaction} = \sum_{i=1}^{8} \frac{\text{voisins du même type que l'individu}}{\text{total de voisins présents}}")
+            insatisfaction = 1/3  # arbitraire et non utilisé pour le moment
+            st.session_state.population = population(n, insatisfaction, vide)
+            
+            st.session_state.population.plot_map()
 
-        sns.heatmap(pop.map_insatisfaction, ax=axes[1], cmap="YlGnBu", cbar=True, xticklabels=False, yticklabels=False)
-        axes[1].set_title("Carte de l'insatisfaction")
+    if st.session_state.step >= 2:
+        with simulate_container:
+            st.markdown("Continuons la simulation en déménageant les individus mécontents")
+            
+            insatisfaction = st.slider("Seuil d'insatisfaction", 0.0, 1.0, st.session_state.params['insatisfaction'], key="schelling_insatisfaction")
+            
+            if st.button("Appliquer un critère de sélection et déménager les individus") or (st.session_state.step >= 2 and insatisfaction != st.session_state.params['insatisfaction']):
+                st.session_state.params['insatisfaction'] = insatisfaction
+                st.session_state.population.simulate(10000)
+                st.session_state.step = 2
+
+    if st.session_state.step >= 3:
+        with results_container:
+            st.markdown("### Résultats de la simulation")
+            st.session_state.population.plot_map()
         
-        # Ajuster l'espace entre les subplots
-        plt.tight_layout()
         
-        # Afficher les heatmaps dans Streamlit
-        st.pyplot(fig)
+        
+        
+        
+        
     
     st.header("2. Modèle continu")
     st.markdown("""
