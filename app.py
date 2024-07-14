@@ -12,10 +12,16 @@ st.write("Découvrez mes projets ci-dessous. Cliquez sur une carte pour en savoi
 # Liste de projets factices
 projects = [
     {
-        "title": "Projet 1",
-        "description": "Description courte du projet 1",
-        "image": "assets/images/parabole_p1.png",
+        "title": "Reconnaître des chiffres écrit",
+        "description": "Le fameux 'Hello world' du deep learning, la reconnaissance des chiffres manuscrits est un classique. Ici, j'intégre le modèle dans une application web.",
+        "image": "assets/images/mnist_p1.png",
         "link": "projet1"
+    },
+    {
+        "title": "Ségrégation spontannée",
+        "description": "Dans les années 1970, Thomas Schelling, economiste américain, énonce qu’une préférence pour le choix de ses voisins sur un critère arbitraire conduit à une ségrégation totale bien que cette ségrégation ne corresponde pas aux préférences individuelles. En 2024, a-t-il toujours raison ?",
+        "image": "assets/images/parabole_p2.png",
+        "link": "projet2"
     }
 ]
 
