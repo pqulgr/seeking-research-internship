@@ -34,7 +34,7 @@ def project_card(title, description, image, link):
         # Note: Dans une vraie application, vous redirigeriez vers la page du projet ici
 
 # Affichage des projets en grille
-cols = st.columns(3)
+cols = st.columns(2)
 for i, project in enumerate(projects):
-    with cols[i % 3]:
+    with cols[i % 2]:
         project_card(**project)
