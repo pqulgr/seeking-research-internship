@@ -26,7 +26,7 @@ def preprocess_image(image_array):
     # Inverser les couleurs (chiffre blanc sur fond noir)
     inverted_image = ImageOps.invert(gray_image)
     # Redimensionner l'image à 28x28 pixels
-    resized_image = inverted_image.resize((28, 28), Image.LANCZOS)
+    resized_image = np.array(inverted_image.resize((28, 28), Image.LANCZOS))
     # Normaliser les valeurs des pixels
     normalized_image = resized_image.astype('float32') / 255.0
     # Ajouter les dimensions pour correspondre à l'entrée du modèle

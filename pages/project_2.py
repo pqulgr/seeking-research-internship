@@ -112,9 +112,7 @@ class Population:
     
 
 
-def main():
-    st.set_page_config(layout="wide", page_title="Simulation de Ségrégation")
-    st.title("Modélisation de population et évolution de la ségrégation")
+def main_schelling():
 
     if 'step' not in st.session_state:
         st.session_state.step = 0
@@ -185,7 +183,7 @@ def main():
         dump = np.zeros((3,3))
         with col1:
             st.markdown("### Cas 1: Satisfait")
-            grid1 = create_example_grid([1, 1, 2, 1, 1, 2, 0, 1, 0])
+            grid1 = create_example_grid([1, 1, 1, 1, 1, 1, 0, 1, 0])
             insatisfaction1 = create_map_insatisfaction(grid1, 3)
             insatisfaction1_ = dump.copy()
             insatisfaction1_[1,1] = insatisfaction1[1,1]
@@ -216,7 +214,7 @@ def main():
             st.pyplot(fig3)
             st.write(f"Insatisfaction: {insatisfaction3[1, 1]:.2f}")
 
-        insatisfaction = st.slider("Seuil d'insatisfaction toléré", 0.0, 1.0, 0.6, step=0.01)
+        insatisfaction = st.slider("Seuil d'insatisfaction toléré", 0.0, 1.0, 1/3, step=0.01)
         
         if st.button("Appliquer le seuil d'insatisfaction") or st.session_state.step >= 2:
             st.session_state.step = max(st.session_state.step, 2)
@@ -232,13 +230,14 @@ def main():
         Maintenant que nous avons défini notre population et le seuil d'insatisfaction, nous pouvons lancer la simulation.
         Les individus insatisfaits vont se déplacer vers des cases vides jusqu'à ce que tous soient satisfaits ou que le nombre maximal d'itérations soit atteint.
         """)
-        iterations = st.number_input("Nombre d'itérations", min_value=1, max_value=10000, value=1000, step=100)
+        iterations = st.number_input("Nombre d'itérations", min_value=1, max_value=10000, value=10000, step=100)
         
         if st.button("Lancer la simulation"):
             total_cells = st.session_state.population.n_pop ** 2
             unsatisfied_cells_before = np.sum(st.session_state.population.map_insatisfaction > st.session_state.population.taux_insatisfaction)
-            segreg_cells = np.sum(st.session_state.population.map_insatisfaction==0) ####" refaire ce calcul"
+
             st.session_state.population = st.session_state.population.simulate(iterations)
+            segreg_cells = np.sum(st.session_state.population.map_insatisfaction==0)
             st.markdown(f"### Résultats après {st.session_state.population.iteration} itérations")
             st.pyplot(st.session_state.population.plot_map())
             
@@ -249,7 +248,19 @@ def main():
             col1, col2, col3 = st.columns(3)
             col1.metric("Taux d'insatisfaction avant déplacement des individus", f"{unsatisfied_cells_before/occupied_cells:.2%}")
             col2.metric("Taux d'insatisfaction après déplacement des individus", f"{unsatisfied_cells_after/occupied_cells:.2%}")
-            col3.metric("Pourcentages d'individus entourés uniquement du même type",f"{segreg_cells/occupied_cells:.2%}")
+            col3.metric("Pourcentages d'individus entourés uniquement du même type",f"{((segreg_cells - total_cells)/occupied_cells)+1:.2%}")
+
+            st.markdown("On observe ainsi, qu'en voulant 1/3 de ses voisins semblables, un très fort pourcentage de la population n'est finalement entourée que de ses semblables, résultant ainsi sur la population totale une forte ségrégation.")
 
 if __name__ == "__main__":
-    main()
+    st.set_page_config(layout="wide", page_title="Simulation de Ségrégation")
+    st.title("Modélisation de population et évolution de la ségrégation")
+    option = st.selectbox("Sélectionnez le chapitre", ("Chapitre 1 : Modèle de T.Schelling", "Chapitre 2 : Modèle continu", "Modèle 3 : Modèle continu avec liens"))
+    if option=="Chapitre 1 : Modèle de T.Schelling":
+        main_schelling()
+    elif option == "Chapitre 2 : Modèle continu":
+        st.write("In progress, aviaible soon")
+    elif option =="Modèle 3 : Modèle continu avec liens":
+        st.write("In progress, aviaible soon")
+    else:
+        st.write("Non existant")
