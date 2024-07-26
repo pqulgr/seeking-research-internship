@@ -22,6 +22,12 @@ projects = [
         "description": "Dans les années 1970, Thomas Schelling, economiste américain, énonce qu’une préférence pour le choix de ses voisins sur un critère arbitraire conduit à une ségrégation totale bien que cette ségrégation ne corresponde pas aux préférences individuelles. En 2024, a-t-il toujours raison ?",
         "image": "assets/images/parabole_p2.png",
         "link": "projet2"
+    },
+    {
+        "title": "Reconnaissance d'émotion",
+        "description": "Les ordinateurs sont-il capable de comprendre nos émotions ? (Non, mais ils peuvent les détécter)",
+        "image": "assets/images/FER.png",
+        "link": "projet3"
     }
 ]
 
@@ -34,7 +40,7 @@ def project_card(title, description, image, link):
         # Note: Dans une vraie application, vous redirigeriez vers la page du projet ici
 
 # Affichage des projets en grille
-cols = st.columns(2)
+cols = st.columns(3)
 for i, project in enumerate(projects):
-    with cols[i % 2]:
+    with cols[i % 3]:
         project_card(**project)
