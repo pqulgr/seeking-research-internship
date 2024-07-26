@@ -9,9 +9,12 @@ from io import BytesIO
 
 st.title("Détection d'expression faciale à la demande")
 st.markdown("Le modèle capture les 5 dernières images pour prédire l'évolution de l'émotion sur votre visage. Ainsi, il n'analyse pas l'image en direct, mais votre réaction au cours du temps.")
-st.markdown("Le modèle à été constuit pendant la semaine Challenge à l'IMT-Nord-Europe, avec **Louison Ribouchon** et **Bastien Dejardin**.")
-DISPLAY_WIDTH = 500
-DISPLAY_HEIGHT = 320
+st.markdown("Le modèle a été construit pendant la semaine Challenge à l'IMT-Nord-Europe, avec **Louison Ribouchon** et **Bastien Dejardin**.")
+
+CAPTURE_WIDTH = 1280  # Augmentation de la résolution de capture
+CAPTURE_HEIGHT = 720
+DISPLAY_WIDTH = 640  # Taille d'affichage réduite
+DISPLAY_HEIGHT = 480
 SKIP_FRAMES = 1
 VECTOR_SAMPLE_RATIO = 0.7  # Afficher 70% des vecteurs
 
@@ -84,7 +87,6 @@ def plot_vector_visualization(matrice):
     ax.set_title("Vecteurs d'entrée (échantillon)", fontsize=10)
     plt.tight_layout()
     
-    # Convertir le graphique en image
     buf = BytesIO()
     fig.savefig(buf, format="png")
     plt.close(fig)
@@ -100,6 +102,8 @@ def video_mode():
     prediction_placeholder = st.empty()
     
     cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAPTURE_WIDTH)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAPTURE_HEIGHT)
     
     stop_button = st.button("Arrêter la capture")
     
@@ -145,8 +149,6 @@ def video_mode():
 def vector_visualization_mode():
     st.markdown("Ici vous pouvez visualiser ce sur quoi l'algorithme prédit votre expression. Si votre sourire monte, les vecteurs auront tendance à monter, et si vous êtes triste, les vecteurs vont tirer vers le bas.")
     captured_landmarks = []
-    prediction = None
-    confidence = None
     frame_count = 0
     
     col1, col2 = st.columns([2, 1])
@@ -154,13 +156,11 @@ def vector_visualization_mode():
     with col1:
         vector_placeholder = st.empty()
     
-    #with col2:
-        #prediction_placeholder = st.empty()
-    
     cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAPTURE_WIDTH)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAPTURE_HEIGHT)
     
     stop_button = st.button("Arrêter la capture")
-    
     
     while cap.isOpened() and not stop_button:
         ret, frame = cap.read()
@@ -180,17 +180,9 @@ def vector_visualization_mode():
                 captured_landmarks.pop(0)
             
             if len(captured_landmarks) == 5:
-                #prediction, confidence = predict_expression(captured_landmarks)
                 X_viz = landmarks_contours_to_vec(captured_landmarks)
                 img_buf = plot_vector_visualization(X_viz.reshape(-1, 2))
-                vector_placeholder.image(img_buf.getvalue(), width=500)  # Contrôle de la taille ici
-            
-            #if prediction is not None and confidence is not None:
-            #    expression = EXPRESSION_LABELS[prediction]
-            #    if confidence > 0.6:
-            #        prediction_placeholder.write(f"Expression prédite : {expression} (Confiance : {confidence:.2f})")
-            #    else:
-            #        prediction_placeholder.write("Expression : incertaine")
+                vector_placeholder.image(img_buf.getvalue(), width=500)
     
     cap.release()
 
