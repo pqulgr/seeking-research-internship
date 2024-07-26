@@ -5,4 +5,4 @@ tensorflow==2.16.1
 seaborn==0.13.2
 mediapipe==0.10.14
 matplotlib==3.8.0
-opencv-python==4.10.0.82
+opencv-python-headless
