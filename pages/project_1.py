@@ -3,6 +3,7 @@ from streamlit_drawable_canvas import st_canvas
 import numpy as np
 from tensorflow.keras.models import load_model
 from PIL import Image, ImageOps
+import cv2
 
 st.title("Reconnaissance de chiffres manuscrits")
 st.write("Dessinez un chiffre et l'application essaiera de le reconnaître.")
@@ -22,13 +23,50 @@ model = load_keras_model()
 # Prétraitement de l'image
 def preprocess_image(image_array):
     # Convertir l'image en niveaux de gris
-    gray_image = Image.fromarray(image_array).convert('L')
-    # Inverser les couleurs (chiffre blanc sur fond noir)
-    inverted_image = ImageOps.invert(gray_image)
-    # Redimensionner l'image à 28x28 pixels
-    resized_image = np.array(inverted_image.resize((28, 28), Image.LANCZOS))
+    gray_image = cv2.cvtColor(image_array, cv2.COLOR_RGBA2GRAY)
+    
+    # Binarisation de l'image
+    _, binary_image = cv2.threshold(gray_image, 128, 255, cv2.THRESH_BINARY_INV)
+    
+    # Trouver les contours
+    contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    if contours:
+        # Trouver le plus grand contour (supposé être le chiffre)
+        max_contour = max(contours, key=cv2.contourArea)
+        x, y, w, h = cv2.boundingRect(max_contour)
+        
+        # Extraire le chiffre
+        digit = binary_image[y:y+h, x:x+w]
+        
+        # Ajouter une bordure pour centrer le chiffre
+        aspect_ratio = h / w
+        if aspect_ratio > 1:
+            # Plus haut que large
+            new_w = int(h * 1.2)
+            new_h = new_w
+        else:
+            # Plus large que haut
+            new_h = int(w * 1.2)
+            new_w = new_h
+        
+        side = max(new_w, new_h)
+        top = (side - h) // 2
+        bottom = side - h - top
+        left = (side - w) // 2
+        right = side - w - left
+        
+        padded_digit = cv2.copyMakeBorder(digit, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+        
+        # Redimensionner l'image à 28x28 pixels
+        resized_image = cv2.resize(padded_digit, (28, 28), interpolation=cv2.INTER_AREA)
+    else:
+        # Si aucun contour n'est trouvé, retourner une image vide
+        resized_image = np.zeros((28, 28), dtype=np.uint8)
+    
     # Normaliser les valeurs des pixels
     normalized_image = resized_image.astype('float32') / 255.0
+    
     # Ajouter les dimensions pour correspondre à l'entrée du modèle
     return normalized_image.reshape(1, 28, 28, 1)
 
@@ -61,18 +99,23 @@ canvas_result = st_canvas(
     key="canvas",
 )
 
-if st.button("Prédire"):
-    if canvas_result.image_data is not None:
-        image_tensor = preprocess_image(canvas_result.image_data)
-        predicted_digit, confidence = predict_digit(image_tensor)
+
+if canvas_result.image_data is not None:
+    image_tensor = preprocess_image(canvas_result.image_data)
+    predicted_digit, confidence = predict_digit(image_tensor)
         
-        if predicted_digit is not None:
-            if confidence<0.6:
-                st.write("Chiffre non reconnu")
-            else:
-                st.write(f'Chiffre prédit : {predicted_digit}')
-                st.write(f'Confiance : {confidence:.2%}')
-        else:
-            st.write("Le modèle n'a pas pu être chargé. Veuillez vérifier le chemin du fichier et l'architecture du modèle.")
+    if predicted_digit is not None:
+        st.write(f'Chiffre prédit : {predicted_digit}')
+        st.write(f'Confiance : {confidence:.2%}')
+            
+        if confidence < 0.7:
+            st.write("Attention : La confiance est faible. Essayez de dessiner plus clairement.")
     else:
-        st.write("Veuillez dessiner un chiffre avant de prédire.")
+        st.write("Le modèle n'a pas pu être chargé. Veuillez vérifier le chemin du fichier et l'architecture du modèle.")
+else:
+    st.write("Veuillez dessiner un chiffre avant de prédire.")
+
+# Affichage de l'image prétraitée (pour le débogage)
+if canvas_result.image_data is not None:
+    preprocessed = preprocess_image(canvas_result.image_data)
+    st.image(preprocessed.reshape(28, 28), caption="Image prétraitée", width=140)
