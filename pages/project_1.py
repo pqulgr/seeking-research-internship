@@ -2,7 +2,6 @@ import streamlit as st
 from streamlit_drawable_canvas import st_canvas
 import numpy as np
 from tensorflow.keras.models import load_model
-from PIL import Image, ImageOps
 import cv2
 
 st.title("Reconnaissance de chiffres manuscrits")
