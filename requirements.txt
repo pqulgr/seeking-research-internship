@@ -1,5 +1,7 @@
-streamlit
-streamlit_drawable_canvas
-tensorflow
-seaborn
-mediapipe
+streamlit==1.32.2
+streamlit_drawable_canvas==0.9.3
+statsmodels==0.14.2
+tensorflow==2.16.1
+seaborn==0.13.2
+mediapipe==0.10.14
+matplotlib==3.8.0
