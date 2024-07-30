@@ -13,8 +13,8 @@ st.markdown("Le modèle a été construit pendant la semaine Challenge à l'IMT-
 
 CAPTURE_WIDTH = 1280  # Augmentation de la résolution de capture
 CAPTURE_HEIGHT = 720
-DISPLAY_WIDTH = 640  # Taille d'affichage réduite
-DISPLAY_HEIGHT = 480
+DISPLAY_WIDTH = 1280  # Taille d'affichage réduite
+DISPLAY_HEIGHT = 720
 SKIP_FRAMES = 1
 VECTOR_SAMPLE_RATIO = 0.7  # Afficher 70% des vecteurs
 
@@ -54,7 +54,7 @@ def process_image(image):
 
 @st.cache_data
 def landmarks_contours_to_vec(X_temp):
-    if len(X_temp) < 1:
+    if len(X_temp) < 2:
         return None
     X_ = np.array(extract_contours_landmarks(X_temp[-1] - X_temp[0]))
     X_ = 1000*X_
@@ -62,7 +62,7 @@ def landmarks_contours_to_vec(X_temp):
 
 def predict_expression(captured_landmarks):
     if len(captured_landmarks) >= 5:
-        X = landmarks_contours_to_vec(captured_landmarks[-5:])
+        X = landmarks_contours_to_vec(captured_landmarks)
         if X is not None and model is not None:
             result = model.predict(X, verbose=0)
             predicted_class = np.argmax(result[0])
@@ -130,7 +130,7 @@ def video_mode():
                 captured_landmarks.append(landmarks)
                 
                 if len(captured_landmarks) > 5:
-                    captured_landmarks.pop(0)
+                    temp = captured_landmarks.pop(0)
                 
                 if len(captured_landmarks) == 5:
                     prediction, confidence = predict_expression(captured_landmarks)
