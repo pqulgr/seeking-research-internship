@@ -104,8 +104,11 @@ if canvas_result.image_data is not None:
     predicted_digit, confidence = predict_digit(image_tensor)
         
     if predicted_digit is not None:
-        st.write(f'Chiffre prédit : {predicted_digit}')
-        st.write(f'Confiance : {confidence:.2%}')
+        if confidence < 0.2:
+            st.error("Impossible de prédire le chiffre. Veuillez dessiner plus clairement.")
+        else:
+            st.success(f'Chiffre prédit : {predicted_digit}')
+            st.write(f'Confiance : {confidence:.2%}')
             
         if confidence < 0.7:
             st.write("Attention : La confiance est faible. Essayez de dessiner plus clairement.")
