@@ -115,7 +115,7 @@ if canvas_result.image_data is not None:
     else:
         st.write("Le modèle n'a pas pu être chargé. Veuillez vérifier le chemin du fichier et l'architecture du modèle.")
 else:
-    st.write("Veuillez dessiner un chiffre avant de prédire.")
+    st.write("Veuillez dessiner un chiffre")
 
 # Affichage de l'image prétraitée (pour le débogage)
 if canvas_result.image_data is not None:
