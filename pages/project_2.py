@@ -139,7 +139,7 @@ def main_schelling():
     st.header("Étape 1 : Configuration initiale")
     col1, col2 = st.columns(2)
     with col1:
-        n = st.slider("Taille de la grille", 10, 100, 50)
+        n = st.slider("Taille de la grille", 10, 100, 30)
     with col2:
         vide = st.slider("Proportion de cases vides", 0.1, 0.5, 0.1, step=0.05)
 
@@ -230,7 +230,7 @@ def main_schelling():
         Maintenant que nous avons défini notre population et le seuil d'insatisfaction, nous pouvons lancer la simulation.
         Les individus insatisfaits vont se déplacer vers des cases vides jusqu'à ce que tous soient satisfaits ou que le nombre maximal d'itérations soit atteint.
         """)
-        iterations = st.number_input("Nombre d'itérations", min_value=1, max_value=10000, value=10000, step=100)
+        iterations = st.number_input("Nombre d'itérations", min_value=1, max_value=10000, value=1000, step=100)
         
         if st.button("Lancer la simulation"):
             total_cells = st.session_state.population.n_pop ** 2
@@ -250,7 +250,7 @@ def main_schelling():
             col2.metric("Taux d'insatisfaction après déplacement des individus", f"{unsatisfied_cells_after/occupied_cells:.2%}")
             col3.metric("Pourcentages d'individus entourés uniquement du même type",f"{((segreg_cells - total_cells)/occupied_cells)+1:.2%}")
 
-            st.markdown("On observe ainsi, qu'en voulant 1/3 de ses voisins semblables, un très fort pourcentage de la population n'est finalement entourée que de ses semblables, résultant ainsi sur la population totale une forte ségrégation.")
+            st.markdown("On observe ainsi, qu'en voulant 1/3 de ses voisins semblables, un très fort pourcentage de la population n'est finalement entourée que de ses semblables, résultant ainsi sur la population totale une forte ségrégation. C'est ce que T.Schelling à observé comme effet pervers. Un faible critère de séléction pour ses voisins mène la population vers une forte ségrégation, bien que celle-ci ne soit pas voulu par les individus.")
 
 if __name__ == "__main__":
     st.set_page_config(layout="wide", page_title="Simulation de Ségrégation")

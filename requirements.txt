@@ -8,3 +8,5 @@ matplotlib==3.8.0
 opencv-python-headless
 streamlit-webrtc
 ultralytics
+prophet
+plotly
