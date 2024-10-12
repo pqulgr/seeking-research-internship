@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import base64
 
 
 def create_map_pop(n,tx_vide):
@@ -256,6 +257,21 @@ if __name__ == "__main__":
     st.set_page_config(layout="wide", page_title="Simulation de Ségrégation")
     st.title("Modélisation de population et évolution de la ségrégation")
     option = st.selectbox("Sélectionnez le chapitre", ("Chapitre 1 : Modèle de T.Schelling", "Chapitre 2 : Modèle continu", "Modèle 3 : Modèle continu avec liens"))
+
+    if st.checkbox("Afficher l'abstract et la bibliographie commentée"):
+        pdf_file = "assets/images/MCOT_43352_27154.pdf"
+
+        # Read the PDF and encode it to base64
+        with open(pdf_file, "rb") as f:
+            base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+
+        # Embed the PDF in an HTML iframe, centered using CSS
+        pdf_display = f'''
+        <div style="display: flex; justify-content: center;">
+            <iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>
+        </div>
+        '''
+        st.markdown(pdf_display, unsafe_allow_html=True)
     if option=="Chapitre 1 : Modèle de T.Schelling":
         main_schelling()
     elif option == "Chapitre 2 : Modèle continu":

@@ -80,7 +80,7 @@ def main():
 
         # Configuration du modèle
         st.subheader("Configuration du modèle")
-        n_forecasts = st.slider("Nombre de périodes à prédire", 7, 90, 30)
+        n_forecasts = st.slider("Nombre de périodes à prédire", 7, 1000, 50)
         yearly_seasonality = st.checkbox("Saisonnalité annuelle", value=True)
         weekly_seasonality = st.checkbox("Saisonnalité hebdomadaire", value=True)
         daily_seasonality = st.checkbox("Saisonnalité journalière", value=False)
