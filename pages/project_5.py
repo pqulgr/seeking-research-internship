@@ -88,7 +88,7 @@ def main():
     
     else:
         # Génération de données synthétiques
-        num_days = st.slider('Nombre de jours de données à générer', 1, 1000, 100)
+        num_days = 1400
         if st.session_state['export_data'] is None or len(st.session_state['export_data']) != num_days:
             st.session_state['export_data'] = generate_data(num_days)
         df = st.session_state['export_data']
@@ -100,7 +100,7 @@ def main():
         plot_timeseries(df)
     
         # Prédictions
-        n_forecasts = st.slider("Nombre de jours à prédire", 7, 365, 30)
+        n_forecasts = st.slider("Nombre de jours à prédire", 7, 1100, 100)
         if st.button("Faire les prédictions"):
             with st.spinner("Calcul des prédictions en cours..."):
                 forecast = make_predictions(df, n_forecasts)
