@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from neuralprophet import NeuralProphet
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 
 # Paramètres pour la génération de données
@@ -50,8 +49,6 @@ def plot_forecast(df, forecast):
     fig1 = go.Figure()
     fig1.add_trace(go.Scatter(x=df['ds'], y=df['y'], name='Données réelles'))
     fig1.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat1'], name='Prédictions'))
-    fig1.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat1_upper'], name='Limite supérieure', line=dict(dash='dash')))
-    fig1.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat1_lower'], name='Limite inférieure', line=dict(dash='dash')))
     fig1.update_layout(title='Prédictions vs Données réelles', xaxis_title='Date', yaxis_title='Valeur')
     st.plotly_chart(fig1)
 
@@ -64,12 +61,19 @@ def main():
     # Choix de la source des données
     data_option = st.radio("Choisissez une source de données", ("Utiliser des données générées", "Télécharger vos propres données"))
     
-    # Chargement des données
+    df = None  # Initialise df pour éviter les erreurs avant le chargement des données
+
+    # Chargement des données (CSV ou XLSX)
     if data_option == "Télécharger vos propres données":
-        uploaded_file = st.file_uploader("Choisissez un fichier CSV", type=["csv"])
+        uploaded_file = st.file_uploader("Choisissez un fichier CSV ou XLSX", type=["csv", "xlsx"])
         if uploaded_file is not None:
             try:
-                df = pd.read_csv(uploaded_file)
+                # Charger le fichier selon son extension
+                if uploaded_file.name.endswith('.csv'):
+                    df = pd.read_csv(uploaded_file)
+                elif uploaded_file.name.endswith('.xlsx'):
+                    df = pd.read_excel(uploaded_file)
+                
                 st.success("Données chargées avec succès!")
                 
                 # Sélection des colonnes
@@ -104,7 +108,7 @@ def main():
                 plot_forecast(df, forecast)
                 
                 # Option de téléchargement
-                csv = forecast[['ds', 'yhat1', 'yhat1_lower', 'yhat1_upper']].to_csv(index=False)
+                csv = forecast[['ds', 'yhat1']].to_csv(index=False)
                 st.download_button("Télécharger les prédictions (CSV)", csv, "predictions.csv", "text/csv", key='download-csv')
 
 if __name__ == "__main__":
