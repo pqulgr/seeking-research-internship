@@ -14,7 +14,7 @@ def main():
         st.markdown("""
 ### YOLO : Un bond en avant pour la vision par ordinateur
 
-YOLO (*You Only Look Once*), introduit en 2015 par Joseph Redmon, a révolutionné la détection d'objets. Contrairement aux anciennes méthodes comme R-CNN, qui analysaient des portions d'image, YOLO utilise un réseau de neurones convolutifs pour examiner l'image entière en une seule passe. Résultat : une détection rapide et précise, idéale pour le temps réel.
+YOLO (*You Only Look Once*), introduit en 2015. Contrairement aux anciennes méthodes comme R-CNN (Region Based Convolutional Neural Networks), qui analysaient des portions d'image, YOLO utilise un réseau de neurones convolutifs pour examiner l'image entière en une seule passe : il ne regarde l'image qu'une seule fois. Résultat : une détection rapide et précise, idéale pour le temps réel.
 
 #### Impact et performances
 - **Vitesse** : YOLOv1 atteignait 45 FPS en 2015, avec une précision compétitive.
@@ -23,7 +23,7 @@ YOLO (*You Only Look Once*), introduit en 2015 par Joseph Redmon, a révolutionn
 Grâce à ces avancées, YOLOv8 est largement utilisé dans des applications comme la surveillance, la conduite autonome et l’analyse vidéo en temps réel.
 
         """)
-
+    st.markdown("Déposez une image contenant des objets pour voir si yolo les détecte.")
     # Conteneur principal pour aligner les colonnes
     main_container = st.container()
     

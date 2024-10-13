@@ -45,7 +45,7 @@ projects = [
     },
     {
         "title": "Prédiction de Séries Temporelles",
-        "description": "Explorez la puissance de NeuralProphet pour prédire l'évolution de séries temporelles. Téléchargez vos données ou générez des exemples pour tester le modèle.",
+        "description": "Explorez la puissance de NeuralProphet pour prédire l'évolution de séries temporelles. Déposez vos données pour tester le modèle.",
         "image": "assets/images/neural_prophet.png",
         "page": "project_5",
         "explore_time": "Fast"
