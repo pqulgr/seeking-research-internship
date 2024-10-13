@@ -61,9 +61,8 @@ def main():
     # Choix de la source des données
     data_option = st.radio("Choisissez une source de données", ("Utiliser des données générées", "Télécharger vos propres données"))
     
-    df = None  # Initialise df pour éviter les erreurs avant le chargement des données
+    df = None 
 
-    # Chargement des données (CSV ou XLSX)
     if data_option == "Télécharger vos propres données":
         uploaded_file = st.file_uploader("Choisissez un fichier CSV ou XLSX", type=["csv", "xlsx"])
         if uploaded_file is not None:
