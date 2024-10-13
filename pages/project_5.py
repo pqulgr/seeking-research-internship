@@ -1,108 +1,124 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objs as go
-from neuralprophet import NeuralProphet
 import numpy as np
-from datetime import datetime, timedelta
-
-class ExportAnalyzer:
-    def __init__(self):
-        self.df = None
-        self.model = None
-        self.forecast = None
-        self.data_loaded = False
-        self.model_trained = False
-        self.future_periods = 300
-
-    def load_data(self, uploaded_file, date_column, value_column):
-        try:
-            if uploaded_file.name.endswith('.xlsx'):
-                df = pd.read_excel(uploaded_file)
-            elif uploaded_file.name.endswith('.csv'):
-                df = pd.read_csv(uploaded_file)
-            else:
-                raise ValueError("Format de fichier non supporté")
-            
-            df[date_column] = pd.to_datetime(df[date_column])
-            df = df.rename(columns={date_column: 'ds', value_column: 'y'})
-            self.df = df[['ds', 'y']]
-            self.data_loaded = True
-            return True
-        except Exception as e:
-            st.error(f"Erreur lors du chargement des données : {str(e)}")
-            self.data_loaded = False
-            return False
-
-    def generate_data(self):
-        START_DATE = datetime(2020, 1, 1)
-        NUM_DAYS = 1000
-        BASE_EXPORT = 1000
-        TREND = 0.1
-        SEASONALITY = 0.2
-        NOISE = 0.05
-
-        dates = [START_DATE + timedelta(days=i) for i in range(NUM_DAYS)]
-        exports = [max(0, int(BASE_EXPORT + TREND * i + SEASONALITY * BASE_EXPORT * np.sin(2 * np.pi * i / 365) + NOISE * BASE_EXPORT * np.random.randn())) for i in range(NUM_DAYS)]
-        
-        self.df = pd.DataFrame({'ds': dates, 'y': exports})
-        self.data_loaded = True
-
-    def plot_input_data(self):
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=self.df['ds'], y=self.df['y'], mode='lines', name='Données d\'entrée'))
-        fig.update_layout(title="Données d'entrée", xaxis_title="Date", yaxis_title="Valeur")
-        return fig
-
-    def train_model(self):
-        self.model = NeuralProphet()
-        metrics = self.model.fit(self.df, freq='D')
-        future = self.model.make_future_dataframe(self.df, periods=self.future_periods)
-        self.forecast = self.model.predict(future)
-        self.model_trained = True
-        return metrics
-
-    def plot_forecast(self):
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=self.df['ds'], y=self.df['y'], mode='lines', name='Données réelles'))
-        fig.add_trace(go.Scatter(x=self.forecast['ds'], y=self.forecast['yhat1'], mode='lines', name='Prédictions'))
-        fig.update_layout(title="Prédictions vs Réalité", xaxis_title="Date", yaxis_title="Valeur")
-        return fig
+from neuralprophet import NeuralProphet
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 def main():
     st.title("Prédiction de Séries Temporelles avec NeuralProphet")
+    with st.expander("À propos de Prophet"):
+        st.markdown("""
+        ### Prophet : Des prévisions explicables à grande échelle
 
-    if 'analyzer' not in st.session_state:
-        st.session_state.analyzer = ExportAnalyzer()
+        Prophet est un outil open-source développé par Facebook Research, conçu pour la prévision de séries temporelles. NeuralProphet comble le fossé entre les modèles de séries temporelles traditionnels et les méthodes d'apprentissage profond. Il est basé sur PyTorch.
+        #### Caractéristiques principales
+        - **Décomposition additive** : Combine tendance, saisonnalité et jours fériés
+        - **Robuste aux données manquantes** : Gère bien les irrégularités dans les données
+        - **Gestion des changements de tendance** : Détecte les points de changement
+        - **Saisonnalités multiples** : Gère les motifs quotidiens, hebdomadaires et annuels
+        """)
+    # Options pour les données
+    data_option = st.radio(
+        "Choisissez une source de données",
+        ("Utiliser des données générées", "Télécharger vos propres données")
+    )
 
-    data_source = st.radio("Choisissez la source des données :", ("Charger un fichier", "Générer des données"))
-
-    if data_source == "Charger un fichier":
-        uploaded_file = st.file_uploader("Choisissez un fichier CSV ou Excel", type=["csv", "xlsx"])
+    df = None
+    if data_option == "Télécharger vos propres données":
+        uploaded_file = st.file_uploader("Choisissez un fichier CSV", type=["csv"])
         if uploaded_file is not None:
-            df_preview = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file)
-            st.write("Aperçu des données:")
-            st.write(df_preview.head())
-
-            columns = df_preview.columns.tolist()
-            date_column = st.selectbox("Sélectionnez la colonne de date", columns)
-            value_column = st.selectbox("Sélectionnez la colonne de valeur", [col for col in columns if col != date_column])
-
-            if st.button("Charger les données"):
-                if st.session_state.analyzer.load_data(uploaded_file, date_column, value_column):
-                    st.success("Données chargées avec succès!")
-                    st.plotly_chart(st.session_state.analyzer.plot_input_data())
+            try:
+                df = pd.read_csv(uploaded_file)
+                st.success("Données chargées avec succès!")
+                
+                # Sélection des colonnes
+                date_col = st.selectbox("Sélectionnez la colonne de date", df.columns)
+                value_col = st.selectbox("Sélectionnez la colonne de valeurs", [col for col in df.columns if col != date_col])
+                
+                # Préparation des données
+                df = df[[date_col, value_col]].rename(columns={date_col: 'ds', value_col: 'y'})
+                df['ds'] = pd.to_datetime(df['ds'])
+            except Exception as e:
+                st.error(f"Erreur lors du chargement du fichier : {str(e)}")
     else:
-        if st.button("Générer des données"):
-            st.session_state.analyzer.generate_data()
-            st.success("Données générées avec succès!")
-            st.plotly_chart(st.session_state.analyzer.plot_input_data())
+        st.write("Utilisation de données générées")
+        dates = pd.date_range(start='2020-01-01', end='2023-12-31', freq='D')
+        values = np.random.randn(len(dates)).cumsum() + 100 + np.sin(np.arange(len(dates))/365*2*np.pi)*10
+        df = pd.DataFrame({'ds': dates, 'y': values})
+        st.success("Données générées avec succès!")
 
-    if st.session_state.analyzer.data_loaded:
-        if st.button("Entraîner le modèle et prédire"):
-            with st.spinner("Entraînement du modèle en cours..."):
-                st.session_state.analyzer.train_model()
-            st.success("Modèle entraîné avec succès!")
-            st.plotly_chart(st.session_state.analyzer.plot_forecast())
+    if df is not None:
+        st.subheader("Aperçu des données")
+        st.dataframe(df.head())
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df['ds'], y=df['y'], mode='lines', name='Données'))
+        fig.update_layout(title='Série temporelle', xaxis_title='Date', yaxis_title='Valeur')
+        st.plotly_chart(fig)
+
+        # Configuration du modèle
+        st.subheader("Configuration de la prédiction")
+        n_forecasts = st.slider("Nombre de jours à prédire", 7, 365, 30)
+
+        if st.button("Faire les prédictions"):
+            with st.spinner("Calcul des prédictions en cours..."):
+                # Création et entraînement du modèle
+                model = NeuralProphet()
+                metrics = model.fit(df, freq="D")
+                
+                # Prédiction
+                future = model.make_future_dataframe(df, periods=n_forecasts)
+                forecast = model.predict(future)
+                
+                st.success("Prédictions calculées avec succès!")
+                
+                # Affichage des résultats
+                st.subheader("Résultats de la prédiction")
+                
+                # 1. Graphique des prédictions
+                fig1 = go.Figure()
+                fig1.add_trace(go.Scatter(x=df['ds'], y=df['y'], name='Données réelles'))
+                fig1.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat1'], name='Prédictions'))
+                fig1.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat1_upper'], name='Limite supérieure', line=dict(dash='dash')))
+                fig1.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat1_lower'], name='Limite inférieure', line=dict(dash='dash')))
+                fig1.update_layout(title='Prédictions vs Données réelles', xaxis_title='Date', yaxis_title='Valeur')
+                st.plotly_chart(fig1)
+                
+                # 2. Composantes du modèle
+                components = model.get_latest_forecast_components(future)
+                fig2 = make_subplots(rows=3, cols=1, subplot_titles=('Tendance', 'Saisonnalité annuelle', 'Saisonnalité hebdomadaire'))
+                fig2.add_trace(go.Scatter(x=components['ds'], y=components['trend'], name='Tendance'), row=1, col=1)
+                fig2.add_trace(go.Scatter(x=components['ds'], y=components['yearly'], name='Saisonnalité annuelle'), row=2, col=1)
+                fig2.add_trace(go.Scatter(x=components['ds'], y=components['weekly'], name='Saisonnalité hebdomadaire'), row=3, col=1)
+                fig2.update_layout(height=900, title_text="Composantes du modèle")
+                st.plotly_chart(fig2)
+                
+                # 3. Erreurs de prédiction
+                errors = df['y'].values - forecast['yhat1'][:len(df)].values
+                fig3 = go.Figure()
+                fig3.add_trace(go.Scatter(x=df['ds'], y=errors, mode='markers', name='Erreurs'))
+                fig3.update_layout(title='Erreurs de prédiction', xaxis_title='Date', yaxis_title='Erreur')
+                st.plotly_chart(fig3)
+                
+                # Métriques de performance
+                st.subheader("Précision du modèle")
+                mae = np.mean(np.abs(errors))
+                rmse = np.sqrt(np.mean(errors**2))
+                
+                col1, col2 = st.columns(2)
+                col1.metric("Erreur moyenne absolue (MAE)", f"{mae:.2f}")
+                col2.metric("Racine de l'erreur quadratique moyenne (RMSE)", f"{rmse:.2f}")
+                
+                # Option de téléchargement des prédictions
+                csv = forecast[['ds', 'yhat1', 'yhat1_lower', 'yhat1_upper']].to_csv(index=False)
+                st.download_button(
+                    "Télécharger les prédictions (CSV)",
+                    csv,
+                    "predictions.csv",
+                    "text/csv",
+                    key='download-csv'
+                )
 
 if __name__ == "__main__":
     main()
